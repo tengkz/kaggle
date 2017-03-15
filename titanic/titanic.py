@@ -20,13 +20,16 @@ def preprocess_data(x):
     x.loc[x['Embarked']=='S','Embarked']=3
     from sklearn.preprocessing import Imputer
     imp = Imputer(missing_values='NaN',strategy='mean',axis=0)
-    imp.fit(x)
-    x = imp.transform(x)
+    x = imp.fit_transform(x)
     #x.loc[pd.isnull(x['Age']),'Age']=0
     #x.loc[pd.isnull(x['Embarked']),'Embarked']=0
     #x.loc[pd.isnull(x['Fare']),'Fare']=0
+    from sklearn.preprocessing import OneHotEncoder
+    enc = OneHotEncoder()
+    x_1 = enc.fit_transform(x[:,[0,1,6]])
+    x_2 = x[:,[2,3,4,5]]
+    x = np.hstack([x_1.todense(),x_2])
     return x
-
 
 train = pd.read_csv('train.csv',sep=',',header=0)
 x = train[['Pclass','Sex','Age','SibSp','Parch','Fare','Embarked']]
@@ -47,4 +50,4 @@ test_y = clf.predict(np.array(test_x))
 test_passengers = test['PassengerId']
 
 ret = pd.DataFrame({"PassengerId":test_passengers,"Survived":test_y})
-#ret.to_csv('result.csv',index=False)
+ret.to_csv('result.csv',index=False)
