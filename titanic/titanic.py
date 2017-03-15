@@ -20,7 +20,7 @@ def preprocess_data(x):
     x.loc[x['Embarked']=='S','Embarked']=3
     #impute nan
     from sklearn.preprocessing import Imputer
-    imp = Imputer(missing_values='NaN',strategy='median',axis=0)
+    imp = Imputer(missing_values='NaN',strategy='most_frequent',axis=0)
     x = imp.fit_transform(x)  
     #OneHotEncoder
     from sklearn.preprocessing import OneHotEncoder
@@ -46,6 +46,7 @@ def scale_data(train_x,test_x):
     test_x_1 = min_max_scaler.transform(test_x_1)
     return np.hstack([train_x_1,train_x_2]),np.hstack([test_x_1,test_x_2])
 
+#load data
 train = pd.read_csv('train.csv',sep=',',header=0)
 x = train[['Pclass','Sex','Age','SibSp','Parch','Fare','Embarked']]
 y = train['Survived']
@@ -58,55 +59,31 @@ test_x = preprocess_data(test_x)
 x,test_x = scale_data(x,test_x)
 
 mode = 'predict'
-method = 'logistic_regression'
+method = 'svm'
+
+#model selection
+if method == 'decision_tree':
+    from sklearn import tree
+    clf = tree.DecisionTreeClassifier()
+elif method == 'logistic_regression':
+    from sklearn import linear_model
+    clf = linear_model.LogisticRegression()
+elif method == 'svm':
+    from sklearn import svm
+    clf = svm.SVC(kernel='rbf')
+elif method == 'random_forest':
+    from sklearn.ensemble import RandomForestClassifier
+    clf = RandomForestClassifier(n_estimators=20)
 
 if mode == 'test':
     from sklearn.cross_validation import train_test_split
     my_train_x,my_test_x,my_train_y,my_test_y = train_test_split(
-        np.array(x),np.array(y),test_size=0.1,random_state=10)
-    
-    #train a model
-    if method == 'decision_tree':
-        from sklearn import tree
-        clf = tree.DecisionTreeClassifier()
-        clf = clf.fit(np.array(my_train_x),np.array(my_train_y))
-    elif method == 'logistic_regression':
-        from sklearn import linear_model
-        lgm = linear_model.LogisticRegression()
-        lgm.fit(np.array(my_train_x),np.array(my_train_y))
-    elif method == 'svm':
-        from sklearn import svm
-        clf = svm.SVC()
-        clf.fit(np.array(my_train_x),np.array(my_train_y))
-    elif method == 'random_forest':
-        from sklearn.ensemble import RandomForestClassifier
-        clf = RandomForestClassifier(n_estimators=20)
-        clf.fit(np.array(my_train_x),np.array(my_train_y))
-    
+        np.array(x),np.array(y),test_size=0.1,random_state=0)
+    clf.fit(np.array(my_train_x),np.array(my_train_y))
     print clf.score(my_test_x,my_test_y)
-
 elif mode == 'predict':
-    if method == 'decision_tree':
-        from sklearn import tree
-        clf = tree.DecisionTreeClassifier()
-        clf = clf.fit(np.array(x),np.array(y))
-        test_y = clf.predict(np.array(test_x))
-    elif method == 'logistic_regression':
-        from sklearn import linear_model
-        clf = linear_model.LogisticRegression()
-        clf.fit(np.array(x),np.array(y))
-        test_y = clf.predict(test_x)
-    elif method == 'svm':
-        from sklearn import svm
-        clf = svm.SVC()
-        clf.fit(np.array(x),np.array(y))
-        test_y = clf.predict(test_x)
-    elif method == 'random_forest':
-        from sklearn.ensemble import RandomForestClassifier
-        clf = RandomForestClassifier(n_estimators=20)
-        clf.fit(np.array(x),np.array(y))
-        test_y = clf.predict(test_x)
-
+    clf.fit(np.array(x),np.array(y))
+    test_y = clf.predict(test_x)
     test_passengers = test['PassengerId']
     ret = pd.DataFrame({"PassengerId":test_passengers,"Survived":test_y})
     ret.to_csv('result.csv',index=False)
