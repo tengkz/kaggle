@@ -18,18 +18,33 @@ def preprocess_data(x):
     x.loc[x['Embarked']=='C','Embarked']=1
     x.loc[x['Embarked']=='Q','Embarked']=2
     x.loc[x['Embarked']=='S','Embarked']=3
+    #impute nan
     from sklearn.preprocessing import Imputer
     imp = Imputer(missing_values='NaN',strategy='median',axis=0)
-    x = imp.fit_transform(x)
-    #x.loc[pd.isnull(x['Age']),'Age']=0
-    #x.loc[pd.isnull(x['Embarked']),'Embarked']=0
-    #x.loc[pd.isnull(x['Fare']),'Fare']=0
+    x = imp.fit_transform(x)  
+    #OneHotEncoder
     from sklearn.preprocessing import OneHotEncoder
     enc = OneHotEncoder()
     x_1 = enc.fit_transform(x[:,[0,1,6]])
     x_2 = x[:,[2,3,4,5]]
+
     x = np.hstack([x_1.todense(),x_2])
     return x
+
+def scale_data(train_x,test_x):
+    train_x_1 = train_x[:,0:8]
+    train_x_2 = train_x[:,8:12]
+    test_x_1 = test_x[:,0:8]
+    test_x_2 = test_x[:,8:12]
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.preprocessing import MinMaxScaler
+    standard_scaler = StandardScaler().fit(train_x_2)
+    train_x_2 = standard_scaler.transform(train_x_2)
+    test_x_2 = standard_scaler.transform(test_x_2)
+    min_max_scaler = MinMaxScaler().fit(train_x_1)
+    train_x_1 = min_max_scaler.transform(train_x_1)
+    test_x_1 = min_max_scaler.transform(test_x_1)
+    return np.hstack([train_x_1,train_x_2]),np.hstack([test_x_1,test_x_2])
 
 train = pd.read_csv('train.csv',sep=',',header=0)
 x = train[['Pclass','Sex','Age','SibSp','Parch','Fare','Embarked']]
@@ -40,43 +55,35 @@ test = pd.read_csv('test.csv',sep=',',header=0)
 test_x = test[['Pclass','Sex','Age','SibSp','Parch','Fare','Embarked']]
 test_x = preprocess_data(test_x)
 
-mode = 'test'
-method = 'random_forest'
+x,test_x = scale_data(x,test_x)
+
+mode = 'predict'
+method = 'logistic_regression'
 
 if mode == 'test':
-    ratio = 0.1
-    (total_num,dimension) = x.shape
-    train_num = int(total_num*(1-ratio))
-    test_num = total_num-train_num
-    my_train_x = x[0:train_num,:]
-    my_train_y = y[0:train_num]
-    my_test_x = x[train_num:total_num,:]
-    my_test_y = y[train_num:total_num]
+    from sklearn.cross_validation import train_test_split
+    my_train_x,my_test_x,my_train_y,my_test_y = train_test_split(
+        np.array(x),np.array(y),test_size=0.1,random_state=10)
     
     #train a model
     if method == 'decision_tree':
         from sklearn import tree
         clf = tree.DecisionTreeClassifier()
         clf = clf.fit(np.array(my_train_x),np.array(my_train_y))
-        my_predict_y = clf.predict(np.array(my_test_x))
     elif method == 'logistic_regression':
         from sklearn import linear_model
         lgm = linear_model.LogisticRegression()
         lgm.fit(np.array(my_train_x),np.array(my_train_y))
-        my_predict_y = lgm.predict(my_test_x)
     elif method == 'svm':
         from sklearn import svm
         clf = svm.SVC()
         clf.fit(np.array(my_train_x),np.array(my_train_y))
-        my_predict_y = clf.predict(np.array(my_test_x))
     elif method == 'random_forest':
         from sklearn.ensemble import RandomForestClassifier
         clf = RandomForestClassifier(n_estimators=20)
         clf.fit(np.array(my_train_x),np.array(my_train_y))
-        my_predict_y = clf.predict(np.array(my_test_x))
     
-    precision = sum(my_predict_y==my_test_y)*1.0/len(my_test_y)
-    print precision
+    print clf.score(my_test_x,my_test_y)
 
 elif mode == 'predict':
     if method == 'decision_tree':
