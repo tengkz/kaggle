@@ -86,7 +86,10 @@ test_passengerid = test['PassengerId']
 del train['PassengerId'],test['PassengerId']
 
 from sklearn.ensemble import RandomForestClassifier
-rf = RandomForestClassifier(criterion='gini',n_estimators=700,min_samples_split=10,
+#rf = RandomForestClassifier(criterion='gini',n_estimators=700,min_samples_split=10,
+                            #min_samples_leaf=1,max_features='auto',oob_score=True,
+                            #random_state=1,n_jobs=-1)
+rf = RandomForestClassifier(criterion='entropy',n_estimators=400,min_samples_split=4,
                             min_samples_leaf=1,max_features='auto',oob_score=True,
                             random_state=1,n_jobs=-1)
 rf.fit(train.iloc[:,1:],train.iloc[:,0])
@@ -98,4 +101,11 @@ print pd.concat((pd.DataFrame(train.iloc[:,1:].columns,columns=['Variables']),
 predictions = rf.predict(test)
 passengerid = test_passengerid
 test = pd.concat((pd.DataFrame(passengerid,columns=['PassengerId']),pd.DataFrame(predictions,columns=['Survived'])),axis=1)
-test.to_csv('result.csv',index=None)
+#test.to_csv('result.csv',index=None)
+
+#for grid search
+#from sklearn.grid_search import GridSearchCV
+#rf = RandomForestClassifier(max_features='auto', oob_score=True, random_state=1, n_jobs=-1)
+#param_grid = { "criterion" : ["gini", "entropy"], "min_samples_leaf" : [1, 5, 10], "min_samples_split" : [2, 4, 10, 12, 16], "n_estimators": [50, 100, 400, 700, 1000]}
+#gs = GridSearchCV(estimator=rf, param_grid=param_grid, scoring='accuracy', cv=3, n_jobs=-1)
+#gs = gs.fit(train.iloc[:, 1:], train.iloc[:, 0])

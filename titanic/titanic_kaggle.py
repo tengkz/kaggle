@@ -203,8 +203,8 @@ print '%.4f' % model.oob_score_
 #model.fit(train_valid_X,train_valid_y)
 print model.score(train_X,train_y),model.score(valid_X,valid_y)
 
-#predict_y = model.predict(test_X)
-#ret = pd.DataFrame()
-#ret['PassengerId'] = full.PassengerId[891:]
-#ret['Survived'] = np.array(predict_y,dtype=int)
-#ret.to_csv('result.csv',index=None)
+predict_y = model.predict(test_X)
+ret = pd.DataFrame()
+ret['PassengerId'] = full.PassengerId[891:]
+ret['Survived'] = np.array(predict_y,dtype=int)
+ret.to_csv('result.csv',index=None)
