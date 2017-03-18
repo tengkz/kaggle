@@ -6,7 +6,7 @@ Created on Wed Mar 15 12:19:35 2017
 """
 
 import os
-os.chdir('E:\\machine_learning\\kaggle\\titanic')
+os.chdir('E:\\machine_learning\\kaggle\\kaggle\\titanic')
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -22,7 +22,7 @@ from sklearn.svm import SVC, LinearSVC
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 from sklearn.preprocessing import Imputer, Normalizer, scale
-from sklearn.cross_validation import train_test_split, StratifiedKFold
+from sklearn.cross_validation import train_test_split, StratifiedKFold, cross_val_score
 from sklearn.feature_selection import RFECV
 
 import matplotlib as mpl
@@ -169,14 +169,42 @@ family['Family_Single'] = family['FamilySize'].map(lambda s:1 if s==1 else 0)
 family['Family_Small'] = family['FamilySize'].map(lambda s:1 if 2<=s<=4 else 0)
 family['Family_Large'] = family['FamilySize'].map(lambda s:1 if 5<=s else 0)
 
-full_X = pd.concat([imputed,embarked,pclass,sex,family,cabin,sex],axis=1)
+temp_x_1 = pd.concat([imputed,family['FamilySize']],axis=1)
+from sklearn.preprocessing import StandardScaler
+stand_scaler = StandardScaler()
+temp_x_1 = stand_scaler.fit_transform(temp_x_1)
+
+temp_x_2 = pd.concat([sex,embarked,pclass,title,cabin,family['Family_Single'],family['Family_Small'],family['Family_Large'],ticket],axis=1)
+from sklearn.preprocessing import MinMaxScaler
+minmax_scaler = MinMaxScaler()
+temp_x_2 = minmax_scaler.fit_transform(temp_x_2)
+
+#full_X = pd.concat([sex,embarked,pclass,imputed,title,cabin,family],axis=1)
+full_X = np.hstack([temp_x_1,temp_x_2])
+
 train_valid_X = full_X[0:891]
 train_valid_y = titanic.Survived
 test_X = full_X[891:]
-train_X,valid_X,train_y,valid_y = train_test_split(train_valid_X,train_valid_y,train_size=.7)
+train_X,valid_X,train_y,valid_y = train_test_split(train_valid_X,train_valid_y,train_size=.8,random_state=0)
 print full_X.shape,train_X.shape,valid_X.shape,train_y.shape,valid_y.shape,test_X.shape
 
-#model = RandomForestClassifier(n_estimators=100)
-model = LogisticRegression()
-model.fit(train_X,train_y)
+#model = RandomForestClassifier(n_estimators=200)
+model = RandomForestClassifier(criterion='gini',n_estimators=700,min_samples_split=10,
+                            min_samples_leaf=1,max_features='auto',oob_score=True,
+                            random_state=1,n_jobs=-1)
+model.fit(train_valid_X,train_valid_y)
+print '%.4f' % model.oob_score_
+#model = LogisticRegression()
+#model = SVC(kernel='linear',C=1.)
+#model = GradientBoostingClassifier()
+
+#scores = cross_val_score(model,train_valid_X,train_valid_y,cv=5)
+#print scores.mean()
+#model.fit(train_valid_X,train_valid_y)
 print model.score(train_X,train_y),model.score(valid_X,valid_y)
+
+#predict_y = model.predict(test_X)
+#ret = pd.DataFrame()
+#ret['PassengerId'] = full.PassengerId[891:]
+#ret['Survived'] = np.array(predict_y,dtype=int)
+#ret.to_csv('result.csv',index=None)
