@@ -29,8 +29,10 @@ MSZoning: Identifies the general zoning classification of the sale.
        RM	Residential Medium Density
 	
 LotFrontage: Linear feet of street connected to property
+（有异常离群点，要注意）
 
 LotArea: Lot size in square feet
+（有异常离群点，要注意）
 
 Street: Type of road access to property
 
@@ -176,8 +178,10 @@ OverallCond: Rates the overall condition of the house
        1	Very Poor
 		
 YearBuilt: Original construction date
+（数值，需要归一化）
 
 YearRemodAdd: Remodel date (same as construction date if no remodeling or additions)
+（数值，需要归一化）
 
 RoofStyle: Type of roof
 
@@ -248,6 +252,7 @@ MasVnrType: Masonry veneer type
        Stone	Stone
 	
 MasVnrArea: Masonry veneer area in square feet
+（有离群点，注意排除）
 
 ExterQual: Evaluates the quality of the material on the exterior 
 		
@@ -311,6 +316,7 @@ BsmtFinType1: Rating of basement finished area
        NA	No Basement
 		
 BsmtFinSF1: Type 1 finished square feet
+（有离群点，注意排除）
 
 BsmtFinType2: Rating of basement finished area (if multiple types)
 
@@ -323,6 +329,7 @@ BsmtFinType2: Rating of basement finished area (if multiple types)
        NA	No Basement
 
 BsmtFinSF2: Type 2 finished square feet
+（有相当一部分是0）
 
 BsmtUnfSF: Unfinished square feet of basement area
 
