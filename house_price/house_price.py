@@ -71,7 +71,7 @@ def post_process_cat_data(data):
         del data[feature]
     return data
     
-#data = process_linear_data(data)
+data = process_linear_data(data)
 data = process_cat_data(data)
 data = post_process_cat_data(data)
 
@@ -93,7 +93,7 @@ train_x,valid_x,train_y,valid_y = train_test_split(train_valid_x,train_valid_y,
 #                              n_jobs=-1,random_state=1,oob_score=True)
 
 from sklearn.linear_model import Ridge
-model = Ridge(alpha = 100., fit_intercept=True,normalize=True)
+model = Ridge(alpha = 100., fit_intercept=True,normalize=False)
 #from sklearn.linear_model import LassoLars
 #model = LassoLars(alpha=200)
 
@@ -107,11 +107,11 @@ log_mse = ((np.array(map(log10,predict_y))-np.array(map(log10,valid_y.values)))*
 log_mse_train = ((np.array(map(log10,predict_train_y))-np.array(map(log10,train_y.values)))**2).mean()
 print sqrt(log_mse_train),sqrt(log_mse)
 
-test_y = model.predict(test_x)
-ret = pd.DataFrame()
-ret['Id'] = test['Id']
-ret['SalePrice'] = test_y
-ret.to_csv('result.csv',index=False)
+#test_y = model.predict(test_x)
+#ret = pd.DataFrame()
+#ret['Id'] = test['Id']
+#ret['SalePrice'] = test_y
+#ret.to_csv('result.csv',index=False)
 
 #from sklearn.grid_search import GridSearchCV
 #model = RandomForestRegressor(max_features='auto',n_jobs=-1,random_state=0,
